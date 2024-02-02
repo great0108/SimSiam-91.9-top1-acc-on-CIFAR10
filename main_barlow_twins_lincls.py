@@ -21,7 +21,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 
-from simsiam.resnet_cifar import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+from model.resnet_cifar import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from PIL import Image
 
 
@@ -30,16 +30,16 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('--data', default="./Cifar10",
                     help='path to dataset')
-parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
+parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet50)')
 parser.add_argument('--num_cls', default=10, type=int, metavar='N',
                     help='number of classes in dataset (output dimention of models)')
-parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -75,7 +75,7 @@ parser.add_argument('--dist-backend', default='nccl', type=str,
                     help='distributed backend')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
-parser.add_argument('--gpu', default=None, type=int,
+parser.add_argument('--gpu', default=0, type=int,
                     help='GPU id to use.')
 parser.add_argument('--multiprocessing-distributed', action='store_true',
                     help='Use multi-processing distributed training to launch '
@@ -83,7 +83,7 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 
-parser.add_argument('--pretrained', default='', type=str, help='path to pretrained checkpoint')
+parser.add_argument('--pretrained', default='./checkpoint/barlow_twins_v1/barlow_twins_v1_best.pth', type=str, help='path to pretrained checkpoint')
 
 
 def get_backbone(backbone_name, num_cls=10):

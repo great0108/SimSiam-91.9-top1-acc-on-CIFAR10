@@ -11,38 +11,54 @@ from torch.backends import cudnn
 from torchvision import datasets
 from torchvision import transforms
 
-from simsiam.loader import TwoCropsTransform
-from simsiam.model_factory import SimSiam
-from simsiam.criterion import SimSiamLoss
-from simsiam.validation import KNNValidation
+from model.loader import TwoCropsTransform
+from model.model_factory import BarlowTwins
+from model.criterion import BarlowTwinsLoss
+from model.validation import KNNValidation
 
 parser = argparse.ArgumentParser('arguments for training')
-parser.add_argument('--data_root', type=str, help='path to dataset directory')
-parser.add_argument('--exp_dir', type=str, help='path to experiment directory')
-parser.add_argument('--trial', type=str, default='1', help='trial id')
+parser.add_argument('--data_root', default="./Cifar10", type=str, help='path to dataset directory')
+parser.add_argument('--exp_dir', default="./checkpoint", type=str, help='path to experiment directory')
+parser.add_argument('--trial', type=str, default='barlow_twins_v1', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 
 parser.add_argument('--arch', default='resnet18', help='model name is used for training')
 
 parser.add_argument('--feat_dim', default=2048, type=int, help='feature dimension')
 parser.add_argument('--num_proj_layers', type=int, default=2, help='number of projection layer')
-parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
-parser.add_argument('--num_workers', type=int, default=8, help='num of workers to use')
+parser.add_argument('--batch_size', type=int, default=192, help='batch_size')
+parser.add_argument('--num_workers', type=int, default=16, help='num of workers to use')
 parser.add_argument('--epochs', type=int, default=800, help='number of training epochs')
-parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
-parser.add_argument('--loss_version', default='simplified', type=str,
-                    choices=['simplified', 'original'],
-                    help='do the same thing but simplified version is much faster. ()')
-parser.add_argument('--print_freq', default=10, type=int, help='print frequency')
+parser.add_argument('--gpu', default=0, type=int, help='GPU id to use.')
+parser.add_argument('--loss_lambda', default=0.005, type=float, help='hyperparameter lambda in loss')     
+parser.add_argument('--print_freq', default=100, type=int, help='print frequency')
 parser.add_argument('--eval_freq', default=5, type=int, help='evaluate model frequency')
 parser.add_argument('--save_freq', default=50, type=int, help='save model frequency')
 parser.add_argument('--resume', default=None, type=str, help='path to latest checkpoint')
 
-parser.add_argument('--learning_rate', type=float, default=0.05, help='learning rate')
+parser.add_argument('--learning_rate', type=float, default=0.03, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight decay')
 parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 
 args = parser.parse_args()
+
+def dataset_statistics():
+    train_set = datasets.CIFAR10(root=args.data_root,
+                                 train=True,
+                                 download=True)
+
+    train_loader = DataLoader(dataset=train_set,
+                              batch_size=len(train_set),
+                              shuffle=True,
+                              num_workers=args.num_workers,
+                              pin_memory=True,
+                              drop_last=True)
+
+    for data, label in train_loader:
+        print(data.shape)
+        mean = torch.mean(data, dim=(0,2,3))
+        std = torch.std(data, dim=(0,2,3))
+        print(mean, std)
 
 
 def main():
@@ -76,14 +92,14 @@ def main():
                               pin_memory=True,
                               drop_last=True)
 
-    model = SimSiam(args)
+    model = BarlowTwins(args)
 
     optimizer = optim.SGD(model.parameters(),
                           lr=args.learning_rate,
                           momentum=args.momentum,
                           weight_decay=args.weight_decay)
 
-    criterion = SimSiamLoss(args.loss_version)
+    criterion = BarlowTwinsLoss(args.loss_lambda)
 
     if args.gpu is not None:
         torch.cuda.set_device(args.gpu)
@@ -160,7 +176,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         # compute output
         outs = model(im_aug1=images[0], im_aug2=images[1])
-        loss = criterion(outs['z1'], outs['z2'], outs['p1'], outs['p2'])
+        loss = criterion(outs['z1'], outs['z2'])
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

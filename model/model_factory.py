@@ -92,7 +92,35 @@ class SimSiam(nn.Module):
         return {'z1': z1, 'z2': z2, 'p1': p1, 'p2': p2}
 
 
+class BarlowTwins(nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        self.backbone = BarlowTwins.get_backbone(args.arch)
+        out_dim = self.backbone.fc.weight.shape[1]
+        self.backbone.fc = nn.Identity()
 
+        self.projector = projection_MLP(out_dim, args.feat_dim,
+                                        args.num_proj_layers)
+
+        self.encoder = nn.Sequential(
+            self.backbone,
+            self.projector
+        )
+
+    @staticmethod
+    def get_backbone(backbone_name):
+        return {'resnet18': ResNet18(),
+                'resnet34': ResNet34(),
+                'resnet50': ResNet50(),
+                'resnet101': ResNet101(),
+                'resnet152': ResNet152()}[backbone_name]
+
+    def forward(self, im_aug1, im_aug2):
+
+        z1 = self.encoder(im_aug1)
+        z2 = self.encoder(im_aug2)
+
+        return {'z1': z1, 'z2': z2}
 
 
 
