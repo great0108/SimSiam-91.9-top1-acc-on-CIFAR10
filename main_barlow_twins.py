@@ -13,7 +13,7 @@ from torchvision import transforms
 
 from model.loader import TwoCropsTransform
 from model.model_factory import BarlowTwins
-from model.criterion import BarlowTwinsLoss
+from model.criterion import BarlowTwinsLoss2
 from model.validation import KNNValidation
 
 parser = argparse.ArgumentParser('arguments for training')
@@ -99,7 +99,7 @@ def main():
                           momentum=args.momentum,
                           weight_decay=args.weight_decay)
 
-    criterion = BarlowTwinsLoss(args.loss_lambda)
+    criterion = BarlowTwinsLoss2(args.loss_lambda)
 
     if args.gpu is not None:
         torch.cuda.set_device(args.gpu)

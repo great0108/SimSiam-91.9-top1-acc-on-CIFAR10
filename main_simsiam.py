@@ -19,7 +19,7 @@ from model.validation import KNNValidation
 parser = argparse.ArgumentParser('arguments for training')
 parser.add_argument('--data_root', default="./Cifar10", type=str, help='path to dataset directory')
 parser.add_argument('--exp_dir', default="./checkpoint", type=str, help='path to experiment directory')
-parser.add_argument('--trial', type=str, default='simsiam_v1', help='trial id')
+parser.add_argument('--trial', type=str, default='simsiam_v3', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 
 parser.add_argument('--arch', default='resnet18', help='model name is used for training')
@@ -27,8 +27,8 @@ parser.add_argument('--arch', default='resnet18', help='model name is used for t
 parser.add_argument('--feat_dim', default=2048, type=int, help='feature dimension')
 parser.add_argument('--num_proj_layers', type=int, default=2, help='number of projection layer')
 parser.add_argument('--batch_size', type=int, default=192, help='batch_size')
-parser.add_argument('--num_workers', type=int, default=8, help='num of workers to use')
-parser.add_argument('--epochs', type=int, default=800, help='number of training epochs')
+parser.add_argument('--num_workers', type=int, default=16, help='num of workers to use')
+parser.add_argument('--epochs', type=int, default=200, help='number of training epochs')
 parser.add_argument('--gpu', default=0, type=int, help='GPU id to use.')
 parser.add_argument('--loss_version', default='simplified', type=str,
                     choices=['simplified', 'original'],
@@ -192,6 +192,18 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         if i % args.print_freq == 0:
             progress.display(i)
+            # print(torch.nn.functional.cosine_similarity(outs['z1'], outs['p1'], dim=-1).mean())
+            # # normalize repr. along the batch dimension
+            # z_a_norm = (outs['z1'] - outs['z1'].mean(1, keepdim=True)) / outs['z1'].std(1, keepdim=True) # NxD
+
+            # N = outs['z1'].size(0)
+            # D = outs['z1'].size(1)
+
+            # # cross-correlation matrix
+            # c = torch.mm(z_a_norm.T, z_a_norm) / N # DxD
+            # # multiply off-diagonal elems of c_diff by lambda
+            # a = c[torch.eye(D, dtype=bool)].mean()
+            # print(z_a_norm.min(), z_a_norm.max(), z_a_norm.median())
 
     return losses.avg
 
