@@ -38,6 +38,7 @@ parser.add_argument('--print_freq', default=100, type=int, help='print frequency
 parser.add_argument('--eval_freq', default=5, type=int, help='evaluate model frequency')
 parser.add_argument('--save_freq', default=50, type=int, help='save model frequency')
 parser.add_argument('--resume', default=None, type=str, help='path to latest checkpoint')
+parser.add_argument('--bias', type=float, default=0.0001, help='bias in loss')
 
 parser.add_argument('--learning_rate', type=float, default=0.03, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight decay')
@@ -102,7 +103,7 @@ def main():
                           momentum=args.momentum,
                           weight_decay=args.weight_decay)
 
-    criterion = SimSingleLoss()
+    criterion = SimSingleLoss(args.bias)
 
     if args.gpu is not None:
         torch.cuda.set_device(args.gpu)

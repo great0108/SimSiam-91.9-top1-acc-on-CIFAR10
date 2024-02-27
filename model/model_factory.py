@@ -1,4 +1,6 @@
 from torch import nn
+from torch.nn.parameter import Parameter
+import torch
 from .resnet_cifar import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 
 
@@ -23,6 +25,7 @@ class projection_MLP(nn.Module):
             nn.Linear(hidden_dim, out_dim),
             nn.BatchNorm1d(out_dim, affine=False)  # Page:5, Paragraph:2
         )
+        self.bias = Parameter(torch.ones(in_dim, device="cuda") * 1e-5, requires_grad=False)
 
     def forward(self, x):
         if self.num_layers == 2:
@@ -32,6 +35,8 @@ class projection_MLP(nn.Module):
             x = self.layer1(x)
             x = self.layer2(x)
             x = self.layer3(x)
+        elif self.num_layers == 0:
+            x = x + self.bias
 
         return x
 

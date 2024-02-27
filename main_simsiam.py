@@ -15,20 +15,21 @@ from model.loader import TwoCropsTransform
 from model.model_factory import SimSiam
 from model.criterion import SimSiamLoss
 from model.validation import KNNValidation
+from visualize import Visualize
 
 parser = argparse.ArgumentParser('arguments for training')
 parser.add_argument('--data_root', default="./Cifar10", type=str, help='path to dataset directory')
 parser.add_argument('--exp_dir', default="./checkpoint", type=str, help='path to experiment directory')
-parser.add_argument('--trial', type=str, default='simsiam_v3', help='trial id')
+parser.add_argument('--trial', type=str, default='simsiam_v9', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 
 parser.add_argument('--arch', default='resnet18', help='model name is used for training')
 
-parser.add_argument('--feat_dim', default=2048, type=int, help='feature dimension')
-parser.add_argument('--num_proj_layers', type=int, default=2, help='number of projection layer')
+parser.add_argument('--feat_dim', default=512, type=int, help='feature dimension')
+parser.add_argument('--num_proj_layers', type=int, default=0, help='number of projection layer')
 parser.add_argument('--batch_size', type=int, default=192, help='batch_size')
 parser.add_argument('--num_workers', type=int, default=16, help='num of workers to use')
-parser.add_argument('--epochs', type=int, default=200, help='number of training epochs')
+parser.add_argument('--epochs', type=int, default=800, help='number of training epochs')
 parser.add_argument('--gpu', default=0, type=int, help='GPU id to use.')
 parser.add_argument('--loss_version', default='simplified', type=str,
                     choices=['simplified', 'original'],
@@ -37,6 +38,8 @@ parser.add_argument('--print_freq', default=100, type=int, help='print frequency
 parser.add_argument('--eval_freq', default=5, type=int, help='evaluate model frequency')
 parser.add_argument('--save_freq', default=50, type=int, help='save model frequency')
 parser.add_argument('--resume', default=None, type=str, help='path to latest checkpoint')
+parser.add_argument("--visualize", default=0, type=int, help="model visualize; no vis:0  resume model vis:1  model vis:2")
+parser.add_argument("--visualize_num", default=100, type=int, help="visualize data num for each label")
 
 parser.add_argument('--learning_rate', type=float, default=0.03, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight decay')
@@ -117,6 +120,12 @@ def main():
                   .format(args.resume, start_epoch))
         else:
             print("No checkpoint found at '{}'".format(args.resume))
+
+    if args.visualize == 1:
+        vis = Visualize(model.encoder, args)
+        vis.visualize()
+        vis.pca()
+        return
 
     # routine
     best_acc = 0.0

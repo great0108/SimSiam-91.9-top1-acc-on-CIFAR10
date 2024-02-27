@@ -103,14 +103,11 @@ class BarlowTwinsLoss2(nn.Module):
 
    
 class SimSingleLoss(nn.Module):
-    def __init__(self, lambda_param=5e-3):
+    def __init__(self, bias=1e-4):
         super().__init__()
-        self.lambda_param = lambda_param
+        self.bias = bias
 
-    def forward(self, z_a: torch.Tensor, z_b: torch.Tensor):
-        # normalize
-        z_a_norm = (z_a - z_a.mean(1, keepdim=True)) / z_a.std(1, keepdim=True) # NxD
-        z_b_norm = (z_b - z_b.mean(1, keepdim=True)) / z_b.std(1, keepdim=True) # NxD
-
-
-        return - nn.functional.cosine_similarity(z_a, z_b, dim=-1).mean()
+    def forward(self, z1, z2):
+        z2 = z2.detach()  # stop gradient
+        z1 += torch.ones(z1.shape[-1], device="cuda") * self.bias
+        return - nn.functional.cosine_similarity(z1, z2, dim=-1).mean()

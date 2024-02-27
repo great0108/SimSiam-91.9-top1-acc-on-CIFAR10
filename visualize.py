@@ -91,7 +91,39 @@ class Visualize:
         # Animate
         anim = animation.FuncAnimation(fig, animate, frames=360, interval=20, blit=True)
         # Save
-        anim.save('mpl3d_scatter.gif', fps=30) 
+        anim.save('mpl3d_scatter.gif', fps=30)
+
+    def pca(self):
+        """Extract features from validation split and search on train split features."""
+        n_data = self.train_dataloader.dataset.data.shape[0]
+        feat_dim = self.args.feat_dim
+
+        self.model.eval()
+        if str(self.device) == 'cuda':
+            torch.cuda.empty_cache()
+
+        train_features = torch.zeros([n_data, feat_dim])
+        with torch.no_grad():
+            for batch_idx, (inputs, _) in enumerate(self.train_dataloader):
+                inputs = inputs.to(self.device)
+                batch_size = inputs.size(0)
+
+                # forward
+                features = self.model(inputs)
+                print(features.mean())
+                features = nn.functional.normalize(features)
+                train_features[batch_idx * batch_size:batch_idx * batch_size + batch_size, :] = features.data.cpu()
+
+            train_labels = torch.LongTensor(self.train_dataloader.dataset.targets)
+            
+        pca = PCA(n_components = feat_dim)
+        train_features = pca.fit_transform(train_features)
+        plt.figure(figsize=(6, 6))
+        x = np.arange(feat_dim)
+
+        plt.plot(x, pca.explained_variance_ratio_)
+        plt.yscale("log")
+        plt.show()
 
 
 def test():

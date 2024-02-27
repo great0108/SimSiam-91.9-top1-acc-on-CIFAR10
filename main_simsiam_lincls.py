@@ -61,7 +61,7 @@ parser.add_argument('--wd', '--weight_decay', default=0., type=float,
                     dest='weight_decay')
 parser.add_argument('-p', '--print-freq', default=500, type=int,
                     metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--resume', default='', type=str, metavar='PATH',
+parser.add_argument('--resume', default=None, type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
@@ -83,7 +83,7 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 
-parser.add_argument('--pretrained', default='./checkpoint/simsiam_v1/ckpt_epoch_200_1.pth', type=str, help='path to pretrained checkpoint')
+parser.add_argument('--pretrained', default='./checkpoint/simsiam_v7/simsiam_v7_best.pth', type=str, help='path to pretrained checkpoint')
 
 
 def get_backbone(backbone_name, num_cls=10):

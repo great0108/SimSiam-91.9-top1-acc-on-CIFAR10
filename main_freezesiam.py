@@ -20,7 +20,7 @@ from visualize import Visualize
 parser = argparse.ArgumentParser('arguments for training')
 parser.add_argument('--data_root', default="./Cifar10", type=str, help='path to dataset directory')
 parser.add_argument('--exp_dir', default="./checkpoint", type=str, help='path to experiment directory')
-parser.add_argument('--trial', type=str, default='freezesiam_v4', help='trial id')
+parser.add_argument('--trial', type=str, default='freezesiam_v5', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 
 parser.add_argument('--arch', default='resnet18', help='model name is used for training')
@@ -35,8 +35,8 @@ parser.add_argument('--print_freq', default=100, type=int, help='print frequency
 parser.add_argument('--eval_freq', default=5, type=int, help='evaluate model frequency')
 parser.add_argument('--save_freq', default=50, type=int, help='save model frequency')
 parser.add_argument('--resume', default=None, type=str, help='path to latest checkpoint')
-parser.add_argument("--freeze_model", default="", type=str, help="path to freeze model")
-parser.add_argument("--visualize", default=2, type=int, help="model visualize; no vis:0  freeze model vis:1  model vis:2")
+parser.add_argument("--freeze_model", default=None, type=str, help="path to freeze model")
+parser.add_argument("--visualize", default=1, type=int, help="model visualize; no vis:0  freeze model vis:1  model vis:2")
 parser.add_argument("--visualize_num", default=100, type=int, help="visualize data num for each label")
 
 parser.add_argument('--learning_rate', type=float, default=0.03, help='learning rate')
@@ -215,20 +215,20 @@ def train(train_loader, model, freeze_model, criterion, optimizer, epoch, args):
         if i % args.print_freq == 0:
             progress.display(i)
 
-            print(torch.nn.functional.cosine_similarity(outs['z1'], freeze_outs['z1'], dim=-1).mean())
-            # normalize repr. along the batch dimension
-            z_a_norm = (outs['z1'] - outs['z1'].mean(1, keepdim=True)) / outs['z1'].std(1, keepdim=True) # NxD
+            # print(torch.nn.functional.cosine_similarity(outs['z1'], freeze_outs['z1'], dim=-1).mean())
+            # # normalize repr. along the batch dimension
+            # z_a_norm = (outs['z1'] - outs['z1'].mean(1, keepdim=True)) / outs['z1'].std(1, keepdim=True) # NxD
 
             N = outs['z1'].size(0)
-            D = outs['z1'].size(1)
+            # D = outs['z1'].size(1)
 
-            # cross-correlation matrix
-            c = torch.abs(torch.mm(z_a_norm.T, z_a_norm)) / N # DxD
-            # multiply off-diagonal elems of c_diff by lambda
-            a = c[~torch.eye(D, dtype=bool)].mean()
-            
-            
-            print(a)
+            # # cross-correlation matrix
+            # c = torch.abs(torch.mm(z_a_norm.T, z_a_norm)) / N # DxD
+            # # multiply off-diagonal elems of c_diff by lambda
+            # a = c[~torch.eye(D, dtype=bool)].mean()
+
+            sim = torch.nn.functional.cosine_similarity(outs['z1'][None, :, :], freeze_outs['z1'][:, None, :], dim=-1)
+            print(sim[~torch.eye(N, dtype=bool)].mean())
 
     return losses.avg
 
